@@ -1,17 +1,22 @@
 import jwt from "jsonwebtoken";
 
-export const authMiddleware = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
-    const token = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
+    if (!authHeader) {
       return res.status(401).json({
         success: false,
-        error: "Unauthorized, token missing or invalid",
+        error: "Authorization header missing",
       });
     }
 
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     req.user = {
       userId: decoded.userId,
       role: decoded.role,
@@ -19,9 +24,12 @@ export const authMiddleware = (req, res, next) => {
 
     next();
   } catch (error) {
+    console.error("Auth error:", error.message);
     return res.status(401).json({
       success: false,
-      error: "Unauthorized, token missing or invalid",
+      error: "Invalid or expired token",
     });
   }
 };
+
+export default authMiddleware;

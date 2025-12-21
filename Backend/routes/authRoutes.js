@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import { signupSchema, loginSchema } from "../validators/authValidators.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -82,7 +82,7 @@ router.post("/login", async (req, res) => {
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "24h",
       },
     );
     res.status(200).json({
