@@ -8,7 +8,6 @@ import {
   createClassSchema,
   addStudentSchema,
 } from "../validators/classValidators.js";
-import { success } from "zod";
 
 const router = express.Router();
 
