@@ -26,5 +26,5 @@ const server = http.createServer(app);
 initWebSocketServer(server);
 
 server.listen(PORT, () => {
-  console.log(`HTTP + WS server running on port ${PORT}`);
+  console.log(`HTTP, WS server running on port ${PORT}`);
 });
