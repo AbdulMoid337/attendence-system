@@ -14,10 +14,10 @@ const router = express.Router();
 router.post("/class", authMiddleware, requireTeacher, async (req, res) => {
   const validation = createClassSchema.safeParse(req.body);
   if (!validation.success) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid request schema",
-    });
+      return res.status(400).json({
+        success: false,
+        error: "Invalid request schema",
+      });
   }
   try {
     const newClass = await ClassModel.create({
@@ -36,10 +36,10 @@ router.post("/class", authMiddleware, requireTeacher, async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+      });
   }
 });
 
@@ -186,17 +186,129 @@ router.get("/class/:id", authMiddleware, async (req, res) => {
 
 router.get("/students", authMiddleware, requireTeacher, async (req, res) => {
   try {
-    const students = await User.find({ role: "student" });
+    const students = await User.find({ role: "student" }).select("-password");
     return res.status(200).json({
       success: true,
       data: students,
     });
   } catch (error) {
     console.error(error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+      });
+  }
+});
+
+// Get all classes for a teacher
+router.get("/classes/my-classes", authMiddleware, requireTeacher, async (req, res) => {
+  try {
+    const classes = await ClassModel.find({ teacherId: req.user.userId })
+      .populate("studentIds", "name email")
+      .select("-__v");
+    
+    return res.status(200).json({
+      success: true,
+      data: classes.map(cls => ({
+        _id: cls._id,
+        className: cls.name,
+        teacherId: cls.teacherId,
+        studentCount: cls.studentIds.length,
+        students: cls.studentIds,
+      })),
+    });
+  } catch (error) {
+    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error",
+      error: "Internal server error",
     });
   }
 });
+
+// Get all classes for a student
+router.get("/classes/enrolled", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const classes = await ClassModel.find({ studentIds: userId })
+      .populate("teacherId", "name email")
+      .select("-__v");
+    
+    return res.status(200).json({
+      success: true,
+      data: classes.map(cls => ({
+        _id: cls._id,
+        className: cls.name,
+        teacher: {
+          _id: cls.teacherId._id,
+          name: cls.teacherId.name,
+          email: cls.teacherId.email,
+        },
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+    });
+  }
+});
+
+// Remove student from class
+router.delete(
+  "/class/:id/remove-student/:studentId",
+  authMiddleware,
+  requireTeacher,
+  async (req, res) => {
+    const classId = req.params.id;
+    const studentId = req.params.studentId;
+
+    if (!mongoose.Types.ObjectId.isValid(classId) || !mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid ID format",
+      });
+    }
+
+    try {
+      const cls = await ClassModel.findById(classId);
+      if (!cls) {
+        return res.status(404).json({
+          success: false,
+          error: "Class not found",
+        });
+      }
+
+      if (!cls.teacherId.equals(req.user.userId)) {
+        return res.status(403).json({
+          success: false,
+          error: "Forbidden, not class teacher",
+        });
+      }
+
+      cls.studentIds = cls.studentIds.filter(
+        (id) => id.toString() !== studentId
+      );
+      await cls.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Student removed from class",
+        data: {
+          _id: cls._id,
+          className: cls.name,
+          studentIds: cls.studentIds,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+      });
+    }
+  }
+);
+
 export default router;
