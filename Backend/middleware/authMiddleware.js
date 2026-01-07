@@ -7,7 +7,7 @@ const authMiddleware = (req, res, next) => {
     if (!authHeader) {
       return res.status(401).json({
         success: false,
-        error: "Authorization header missing",
+        error: "Unauthorized, token missing or invalid",
       });
     }
 
@@ -27,7 +27,7 @@ const authMiddleware = (req, res, next) => {
     console.error("Auth error:", error.message);
     return res.status(401).json({
       success: false,
-      error: "Invalid or expired token",
+      error: "Unauthorized, token missing or invalid",
     });
   }
 };
