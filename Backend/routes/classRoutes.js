@@ -200,7 +200,6 @@ router.get("/students", authMiddleware, requireTeacher, async (req, res) => {
   }
 });
 
-// Get all classes for a teacher
 router.get("/classes/my-classes", authMiddleware, requireTeacher, async (req, res) => {
   try {
     const classes = await ClassModel.find({ teacherId: req.user.userId })
