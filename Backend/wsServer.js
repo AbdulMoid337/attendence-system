@@ -54,13 +54,11 @@ export function initWebSocketServer(server) {
         return;
       }
 
-      // 3. Attach user info
       ws.user = {
         userId: decoded.userId,
         role: decoded.role,
       };
 
-      // 4. Handle incoming messages
       ws.on("message", async (message) => {
         let parsed;
 

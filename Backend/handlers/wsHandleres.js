@@ -128,7 +128,6 @@ if (!activeSession) {
 
   const classId = activeSession.classId;
 
-  // 2. Get all students in active class
   const cls = await ClassModel.findById(classId);
   if (!cls) {
     ws.send(
@@ -140,8 +139,7 @@ if (!activeSession) {
     return;
   }
 
-  // 3. Mark absents in memory
-  const presentMap = activeSession.attendance; // { studentId: 'present' | 'absent' }
+  const presentMap = activeSession.attendance; 
   const allStudentIds = cls.studentIds.map((id) => id.toString());
 
   allStudentIds.forEach((sId) => {
@@ -150,14 +148,13 @@ if (!activeSession) {
     }
   });
 
-  // 4. Persist to MongoDB
   const attendanceDocs = allStudentIds.map((sId) => ({
     classId,
     studentsId: sId,
     status: presentMap[sId],
   }));
 
-  await Attendence.deleteMany({ classId }); // optional: clear old records
+  await Attendence.deleteMany({ classId }); 
   await Attendence.insertMany(attendanceDocs);
 
   // 5. Calculate final summary
@@ -166,10 +163,8 @@ if (!activeSession) {
   const absent = statuses.filter((s) => s === "absent").length;
   const total = present + absent;
 
-  // 6. Clear memory
   clearActiveSession();
 
-  // 7. Broadcast DONE
   broadcast({
     event: "DONE",
     data: {
