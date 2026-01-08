@@ -159,7 +159,7 @@ router.get("/class/:id", authMiddleware, async (req, res) => {
     if (!isTeacherOwner && !isEnrolledStudent) {
       return res.status(403).json({
         success: false,
-        error: "Forbidden, not class teacher or enrolled student",
+        error: "Forbidden, not class teacher",
       });
     }
 

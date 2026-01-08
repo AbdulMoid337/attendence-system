@@ -7,6 +7,16 @@ import {
 import ClassModel from "../models/Class.js";
 import Attendence from "../models/Attendence.js";
 
+async function sendErrorAndClose(ws, message) {
+  ws.send(
+    JSON.stringify({
+      event: "ERROR",
+      data: { message },
+    })
+  );
+  ws.close();
+}
+
 async function handleAttendanceMarked(ws, data, broadcast) {
   if (ws.user.role !== "teacher") {
     ws.send(
@@ -20,13 +30,8 @@ async function handleAttendanceMarked(ws, data, broadcast) {
 
   const activeSession = getActiveSession();
   if (!activeSession) {
-    ws.send(
-      JSON.stringify({
-        event: "ERROR",
-        data: { message: "No active attendance session" },
-      }),
-    );
-    return;
+  sendErrorAndClose(ws, "No active attendance session");
+  return;
   }
 
   const { studentId, status } = data || {};
@@ -61,15 +66,10 @@ async function handleTodaySummary(ws, broadcast) {
   }
 
   const activeSession = getActiveSession();
-  if (!activeSession) {
-    ws.send(
-      JSON.stringify({
-        event: "ERROR",
-        data: { message: "No active attendance session" },
-      }),
-    );
-    return;
-  }
+if (!activeSession) {
+  sendErrorAndClose(ws, "No active attendance session");
+  return;
+}
 
   const statuses = Object.values(activeSession.attendance);
   const present = statuses.filter((s) => s === "present").length;
@@ -94,15 +94,10 @@ async function handleMyAttendance(ws) {
   }
 
   const activeSession = getActiveSession();
-  if (!activeSession) {
-    ws.send(
-      JSON.stringify({
-        event: "ERROR",
-        data: { message: "No active attendance session" },
-      }),
-    );
-    return;
-  }
+if (!activeSession) {
+  sendErrorAndClose(ws, "No active attendance session");
+  return;
+}
 
   const status = activeSession.attendance[ws.user.userId] || "not yet updated";
 
@@ -126,15 +121,10 @@ async function handleDone(ws, broadcast) {
   }
 
   const activeSession = getActiveSession();
-  if (!activeSession) {
-    ws.send(
-      JSON.stringify({
-        event: "ERROR",
-        data: { message: "No active attendance session" },
-      }),
-    );
-    return;
-  }
+if (!activeSession) {
+  sendErrorAndClose(ws, "No active attendance session");
+  return;
+}
 
   const classId = activeSession.classId;
 

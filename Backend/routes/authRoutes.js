@@ -57,7 +57,7 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const validation = loginSchema.safeParse(req.body);
-    if (!validation) {
+    if (!validation.success) {
       return res.status(400).json({
         success: false,
         error: "Invalid request schema",
@@ -66,14 +66,14 @@ router.post("/login", async (req, res) => {
     const { email, password } = validation.data;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: "Invalid email or password",
       });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         error: "Invalid email or password",
       });
@@ -105,7 +105,7 @@ router.get("/me", authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: "User not found",
       });
