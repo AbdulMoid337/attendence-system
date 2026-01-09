@@ -24,8 +24,6 @@ export const AuthProvider = ({ children }) => {
           const storedUser = authService.getStoredUser();
           setUser(storedUser);
           setIsAuthenticated(true);
-          
-          // Optionally fetch full user data
           try {
             const response = await authService.getCurrentUser();
             if (response.success) {
@@ -56,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         setUser(storedUser);
         setIsAuthenticated(true);
         
-        // Fetch full user data immediately after login
         try {
           const userResponse = await authService.getCurrentUser();
           if (userResponse.success) {
@@ -67,7 +64,6 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error("Failed to fetch user data:", error);
-          // Continue even if fetching user data fails - we still have basic info
         }
         
         return { success: true };
@@ -86,7 +82,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.signup(name, email, password, role);
       if (response.success) {
-        // Auto-login after signup
         try {
           const loginResponse = await authService.login(email, password);
           if (loginResponse.success) {
@@ -94,7 +89,6 @@ export const AuthProvider = ({ children }) => {
             setUser(storedUser);
             setIsAuthenticated(true);
             
-            // Fetch full user data immediately after signup/login
             try {
               const userResponse = await authService.getCurrentUser();
               if (userResponse.success) {
@@ -105,7 +99,6 @@ export const AuthProvider = ({ children }) => {
               }
             } catch (error) {
               console.error("Failed to fetch user data:", error);
-              // Continue even if fetching user data fails - we still have basic info
             }
             
             return { success: true };

@@ -11,7 +11,7 @@ const ClassAttendance = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [activeTab, setActiveTab] = useState("records"); // records or stats
+  const [activeTab, setActiveTab] = useState("records"); 
 
   useEffect(() => {
     loadClassDetails();
