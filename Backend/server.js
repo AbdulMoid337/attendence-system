@@ -1,6 +1,6 @@
+import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import classRoutes from "./routes/classRoutes.js";
@@ -25,6 +25,7 @@ app.use("/auth", authRoutes);
 app.use("/", classRoutes);
 app.use("/", attendanceRoutes);
 
+console.log("MONGODB_URI =", process.env.MONGODB_URI);
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
