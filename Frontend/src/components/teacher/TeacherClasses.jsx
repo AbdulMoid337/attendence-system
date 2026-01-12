@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import { classService } from "../../services/classService.js";
+import { motion, AnimatePresence } from "framer-motion";
 
 const TeacherClasses = () => {
   const { user } = useAuth();
@@ -56,82 +57,162 @@ const TeacherClasses = () => {
     }
   };
 
+  const containerAnimations = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemAnimations = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading classes...</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500 font-medium">Loading classes...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">My Classes</h1>
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-600">
+            My Classes
+          </h1>
+          <p className="text-gray-500 mt-1">Manage your classes and students</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowCreateModal(true)}
+          className="px-6 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/40 transition-all font-semibold flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Create New Class
+        </motion.button>
+      </div>
+
+      {classes.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass rounded-2xl p-16 text-center shadow-sm"
+        >
+          <div className="w-20 h-20 bg-violet-100/50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">No classes yet</h3>
+          <p className="text-gray-500 max-w-sm mx-auto mb-6">
+            Get started by creating your first class to track attendance effectively.
+          </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            className="text-violet-600 font-semibold hover:text-violet-700 hover:underline"
           >
-            + Create New Class
+            Create Class Now
           </button>
-        </div>
-
-        {classes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-            <p className="text-gray-600 text-lg mb-4">No classes yet</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={containerAnimations}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {classes.map((cls) => (
+            <motion.div
+              key={cls._id}
+              variants={itemAnimations}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              className="glass rounded-2xl p-6 hover:shadow-xl transition-all cursor-pointer group"
+              onClick={() => navigate(`/teacher/classes/${cls._id}`)}
             >
-              Create Your First Class
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {classes.map((cls) => (
-              <div
-                key={cls._id}
-                className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition cursor-pointer"
-                onClick={() => navigate(`/teacher/classes/${cls._id}`)}
-              >
-                <h3 className="text-xl font-bold text-gray-800 mb-2">{cls.className}</h3>
-                <p className="text-gray-600">
-                  {cls.studentCount || 0} {cls.studentCount === 1 ? "student" : "students"}
-                </p>
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-violet-100/50 rounded-xl group-hover:bg-violet-600 group-hover:text-white transition-colors duration-300">
+                  <svg className="w-6 h-6 text-violet-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                  Active
+                </div>
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* Create Class Modal */}
+              <h3 className="text-xl font-bold text-gray-800 mb-1 group-hover:text-violet-600 transition-colors">
+                {cls.className}
+              </h3>
+
+              <div className="flex items-center text-gray-500 text-sm mt-4">
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                {cls.studentCount || 0} Students Enrolled
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Create Class Modal */}
+      <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Create New Class</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCreateModal(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-violet-600 to-indigo-600" />
+
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Create New Class</h2>
+              <p className="text-gray-500 mb-6 text-sm">Give your class a name to get started.</p>
+
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
                   {error}
                 </div>
               )}
+
               <form onSubmit={handleCreateClass}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Class Name
                   </label>
                   <input
                     type="text"
                     value={className}
                     onChange={(e) => setClassName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="Enter class name"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+                    placeholder="e.g. Advanced Mathematics"
                     required
+                    autoFocus
                   />
                 </div>
-                <div className="flex space-x-4">
+
+                <div className="flex space-x-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -139,27 +220,29 @@ const TeacherClasses = () => {
                       setClassName("");
                       setError("");
                     }}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                    className="flex-1 px-4 py-2.5 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors shadow-lg shadow-violet-500/20 disabled:opacity-70"
                   >
-                    {creating ? "Creating..." : "Create"}
+                    {creating ? "Creating..." : "Create Class"}
                   </button>
                 </div>
               </form>
-            </div>
+            </motion.div>
           </div>
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
 
 export default TeacherClasses;
+
+
 
 
